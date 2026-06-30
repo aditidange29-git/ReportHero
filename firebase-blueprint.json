@@ -1,0 +1,105 @@
+{
+  "entities": {
+    "Report": {
+      "title": "Report",
+      "description": "A civic issue report submitted by a citizen, analyzed by Gemini AI.",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string",
+          "description": "Concise issue title under 10 words"
+        },
+        "description": {
+          "type": "string",
+          "description": "Professional 2-3 sentence description of the civic issue"
+        },
+        "category": {
+          "type": "string",
+          "enum": ["Pothole", "Streetlight", "Garbage", "Water Leak", "Drainage", "Illegal Dumping", "Road Damage", "Public Property", "Other"],
+          "description": "The category of the issue"
+        },
+        "severity": {
+          "type": "string",
+          "enum": ["Low", "Medium", "High", "Critical"],
+          "description": "The severity level"
+        },
+        "urgency_score": {
+          "type": "integer",
+          "description": "Urgency score between 1 and 10"
+        },
+        "department": {
+          "type": "string",
+          "enum": ["Municipal Roads Dept", "Water Supply Board", "Sanitation Dept", "Electricity Board", "Town Planning", "Public Works Dept"],
+          "description": "The recommended government department"
+        },
+        "estimated_resolution_days": {
+          "type": "integer",
+          "description": "Estimated resolution time in days"
+        },
+        "citizen_tip": {
+          "type": "string",
+          "description": "A helpful actionable sentence for the citizen"
+        },
+        "ai_confidence": {
+          "type": "number",
+          "description": "AI confidence percentage between 0.70 and 0.99"
+        },
+        "location": {
+          "type": "string",
+          "description": "Text description of the location or area"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["Reported", "In Progress", "Resolved"],
+          "description": "The status of the report"
+        },
+        "support_count": {
+          "type": "integer",
+          "description": "The number of community support votes"
+        },
+        "xp_awarded": {
+          "type": "integer",
+          "description": "XP points awarded to the user"
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Firestore timestamp of report creation"
+        },
+        "report_id": {
+          "type": "string",
+          "description": "Unique Report ID starting with RH-"
+        },
+        "image_url": {
+          "type": "string",
+          "description": "Base64 image URL or uploaded image URL"
+        }
+      },
+      "required": [
+        "title",
+        "description",
+        "category",
+        "severity",
+        "urgency_score",
+        "department",
+        "estimated_resolution_days",
+        "citizen_tip",
+        "ai_confidence",
+        "location",
+        "status",
+        "support_count",
+        "xp_awarded",
+        "created_at",
+        "report_id"
+      ]
+    }
+  },
+  "firestore": {
+    "reports/{reportId}": {
+      "schema": {
+        "$ref": "#/entities/Report"
+      },
+      "description": "Collection of community civic reports"
+    }
+  }
+}

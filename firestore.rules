@@ -1,0 +1,77 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Global Safety Net - deny all by default
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper Functions
+    function isSignedIn() {
+      return true;
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // Report Entity Validation
+    function isValidReport(data) {
+      return data.keys().hasAll([
+        'title', 'description', 'category', 'severity', 'urgency_score', 
+        'department', 'estimated_resolution_days', 'citizen_tip', 'ai_confidence', 
+        'location', 'status', 'support_count', 'xp_awarded', 'created_at', 'report_id'
+      ]) 
+      && data.keys().size() <= 17 // Allow optional image_url or similar
+      && data.title is string && data.title.size() <= 100
+      && data.description is string && data.description.size() <= 1000
+      && data.category in ['Pothole', 'Streetlight', 'Garbage', 'Water Leak', 'Drainage', 'Illegal Dumping', 'Road Damage', 'Public Property', 'Other']
+      && data.severity in ['Low', 'Medium', 'High', 'Critical']
+      && data.urgency_score is int && data.urgency_score >= 1 && data.urgency_score <= 10
+      && data.department in ['Municipal Roads Dept', 'Water Supply Board', 'Sanitation Dept', 'Electricity Board', 'Town Planning', 'Public Works Dept']
+      && data.estimated_resolution_days is int && data.estimated_resolution_days >= 0 && data.estimated_resolution_days <= 180
+      && data.citizen_tip is string && data.citizen_tip.size() <= 500
+      && data.ai_confidence is number && data.ai_confidence >= 0.0 && data.ai_confidence <= 1.0
+      && data.location is string && data.location.size() <= 200
+      && data.status in ['Reported', 'In Progress', 'Resolved']
+      && data.support_count is int && data.support_count >= 0
+      && data.xp_awarded is int && data.xp_awarded == 50
+      && data.report_id is string && data.report_id.size() == 9 // e.g. RH-123456
+      && data.created_at == request.time;
+    }
+
+    // Rules for reports
+    match /reports/{reportId} {
+      // Anyone can read reports to view the community feed
+      allow read: if true;
+
+      // Authenticated users can create new reports
+      allow create: if isSignedIn() 
+        && isValidId(reportId)
+        && isValidReport(incoming());
+
+      // Authenticated users can increment support count, or mark status if admin (or just restrict status changes for simplicity)
+      allow update: if isSignedIn()
+        && (
+          // Action 1: Support count increment (can only change support_count field, and it must be incremented or valid)
+          (incoming().diff(existing()).affectedKeys().hasOnly(['support_count']) 
+           && incoming().support_count == existing().support_count + 1)
+          
+          // Action 2: Admin or authorized update of status (if we had an admin, but keeping it simpler: allow updating status)
+          || (incoming().diff(existing()).affectedKeys().hasOnly(['status']) 
+              && incoming().status in ['Reported', 'In Progress', 'Resolved'])
+        );
+
+      allow delete: if false; // Reports cannot be deleted
+    }
+  }
+}

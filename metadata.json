@@ -1,0 +1,6 @@
+{
+  "name": "ReportHero",
+  "description": "An AI-powered civic issue reporting platform that analyzes photos of problems and generates report details instantly.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
